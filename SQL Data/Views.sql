@@ -28,3 +28,17 @@ FROM Addresses a
 JOIN Cities   ci ON a.CityID     = ci.CityID
 JOIN Countries co ON ci.CountryID = co.CountryID;
 GO
+
+Create VIEW vw_Orders AS
+SELECT 
+    o.OrderID, 
+    o.UserID, 
+    o.TotalAmount, 
+    o.CreatedAt,
+    os.StatusName
+FROM Orders o
+INNER JOIN OrdersStatus os 
+    ON os.StatusID = o.StatusID;
+GO
+
+select * from vw_Orders;

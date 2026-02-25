@@ -103,6 +103,7 @@ namespace DataAccessLayer
 
         }
 
+
         public static bool MakeAdmin(clsDTOs.UserDTO CDTO, clsDTOs.UserDTO ADTO, string HashPassword)
         {
 

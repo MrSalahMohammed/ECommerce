@@ -43,6 +43,8 @@
   <ItemGroup>
     <Compile Include="Business.cs" />
     <Compile Include="Member Classes\clsCustomers.cs" />
+    <Compile Include="Member Classes\clsOrders.cs" />
+    <Compile Include="Member Classes\clsPayments.cs" />
     <Compile Include="Member Classes\clsProducts.cs" />
     <Compile Include="Member Classes\clsAdmins.cs" />
     <Compile Include="General Configurations\General.cs" />

@@ -42,6 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Data\clsOrderData.cs" />
+    <Compile Include="Data\clsPaymentsData.cs" />
     <Compile Include="DTOs\clsDTOs.cs" />
     <Compile Include="Data\clsProductsData.cs" />
     <Compile Include="Data\clsAdminData.cs" />

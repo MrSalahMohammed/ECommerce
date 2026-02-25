@@ -21,11 +21,14 @@ namespace BusinessLayer
         private string Role { get; }
         public DateTime CreatedAt { get; set; }
         public string HashPassword { get; set; }
+        public List<clsDTOs.AddressDTO> Addresses { get; set; }
 
         public clsDTOs.UserDTO CDTO
         {
             get { return (new clsDTOs.UserDTO(this.Id, this.FirstName, this.LastName, this.Email, this.Role, this.CreatedAt)); }
         }
+
+        public clsCustomers() { Role = "Customer"; Mode = enMode.AddNewCustomer; }
 
         public clsCustomers(clsDTOs.UserDTO CDTO, enMode mode = enMode.AddNewCustomer)
         {
@@ -79,6 +82,14 @@ namespace BusinessLayer
             return clsCustomerData.GetAllCustomerAddresses(CDTO);
         }
 
+        public bool RemoveAddress (int AddressID)
+        {
+            if (Addresses == null)
+                throw new ArgumentNullException(nameof(Addresses));
+
+            return clsCustomerData.RemoveAddress(this.CDTO, Addresses[AddressID]);
+        }
+
         public void Delete()
         {
             this.Mode = enMode.DeleteCustomer;
@@ -100,9 +111,23 @@ namespace BusinessLayer
                         throw new InvalidOperationException("Failed to add new customer.");
                     }
                 case enMode.UpdateCustomer:
-                    return false;
+                    if(_UpdateCustomer())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Failed to update customer.");
+                    }
                 case enMode.DeleteCustomer: 
-                    return true;
+                    if(_DeleteCustomer())
+                    {
+                        return true;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("Failed to delete customer.");
+                    }
                 default:
                     throw new InvalidOperationException("Invalid mode for saving customer.");
             }

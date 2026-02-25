@@ -14,6 +14,50 @@ namespace DataAccessLayer
 
         static string ConnectionString = ConfigurationManager.AppSettings["DBConnectionString"];
 
+        public static clsDTOs.UserDTO Login(string Email, string Password)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+
+                    using (SqlCommand command = new SqlCommand("SP_LoginUser", conn))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@Email", Email);
+                        command.Parameters.AddWithValue("@PasswordHash", Password);
+
+                        conn.Open();
+                        using (SqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                return (new clsDTOs.UserDTO
+                                    (
+                                        reader.GetInt32(reader.GetOrdinal("PersonID")),
+                                        reader.GetString(reader.GetOrdinal("FirstName")),
+                                        reader.GetString(reader.GetOrdinal("LastName")),
+                                        reader.GetString(reader.GetOrdinal("Email")),
+                                        reader.GetString(reader.GetOrdinal("PersonRole")),
+                                        reader.GetDateTime(reader.GetOrdinal("CreatedAt"))
+                                    ));
+                            }
+                            else
+                            {
+                                return null;
+                            }
+                        }
+                    }
+                }
+
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("[Error]: " + ex);
+            }
+
+        }
+
         public static clsDTOs.UserDTO GetCustomerByID(int ID)
         {
             try
@@ -110,7 +154,7 @@ namespace DataAccessLayer
 
                         conn.Open();
 
-                        int rowsAffected = command.ExecuteNonQuery();
+                        int rowsAffected = (int)command.ExecuteScalar();
 
                         if (rowsAffected > 0)
                         {
@@ -195,7 +239,7 @@ namespace DataAccessLayer
 
                 using (SqlConnection conn = new SqlConnection(ConnectionString))
                 {
-                    using (SqlCommand command = new SqlCommand("SP_GetUserAllAddressesc", conn))
+                    using (SqlCommand command = new SqlCommand("SP_GetUserAllAddresses", conn))
                     {
                         command.CommandType = CommandType.StoredProcedure;
 
@@ -224,8 +268,41 @@ namespace DataAccessLayer
             }
             catch (SqlException ex)
             {
-                throw new Exception("[Error]: ", ex);
+                throw new Exception(ex.Message);
             }
         }
+
+        public static bool RemoveAddress(clsDTOs.UserDTO CDTO, clsDTOs.AddressDTO addressDTO)
+        {
+            try
+            {
+                using (SqlConnection conn = new SqlConnection(ConnectionString))
+                {
+                    using (SqlCommand command = new SqlCommand("SP_RemoveAddress", conn))
+                    {
+                        command.CommandType = CommandType.StoredProcedure;
+                        command.Parameters.AddWithValue("@AddressID", addressDTO.AddressID);
+                        command.Parameters.AddWithValue("@UserID", CDTO.Id);
+
+                        conn.Open();
+
+                        int rowsAffected = command.ExecuteNonQuery();
+
+                        if (rowsAffected > 0)
+                        {
+                            return true;
+                        }
+
+                        return false;
+                    }
+                }
+            }
+            catch (SqlException ex)
+            {
+                throw new Exception("[Error]: " + ex);
+            }
+        }
+
+
     }
 }

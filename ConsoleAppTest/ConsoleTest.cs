@@ -72,12 +72,8 @@ namespace ConsoleAppTest
 
         static void Main(string[] args)
         {
-
-            //DisplayAllCustomers();
-
-            DisplayCustomerByID(5);
-
-            //AddNewCustomer();
+            
+            clsScreens.Start();
 
         }
     }

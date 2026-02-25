@@ -340,6 +340,37 @@ BEGIN
 END;
 GO
 
+CREATE PROCEDURE SP_LoginUser
+    @Email NVARCHAR(50),
+    @PasswordHash NVARCHAR(128)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+		IF LTRIM(RTRIM(@Email)) = ''
+            THROW 50002, 'Email cannot be empty.', 1;
+
+        IF LTRIM(RTRIM(@PasswordHash)) = ''
+            THROW 50003, 'Password cannot be empty.', 1;
+
+        -- 2. Validate email And Password
+        IF NOT EXISTS (SELECT 1 FROM Users WHERE Email = @Email AND PasswordHash = @PasswordHash)
+            THROW 50004, 'Wrong Email or Password', 1;
+
+    SELECT 
+        PersonID,
+        FirstName,
+		LastName,
+        Email,
+        CreatedAt,
+		PersonRole
+    FROM Users
+    WHERE Email = @Email
+      AND PasswordHash = @PasswordHash
+      AND IsActive = 1;
+END;
+GO
+
 
 -- Deactivate User
 CREATE PROCEDURE SP_DeactivateUser
@@ -493,9 +524,9 @@ GO
 
 
 -- Update Order Status
-CREATE PROCEDURE SP_UpdateOrderStatus
+Create PROCEDURE SP_UpdateOrderStatus
     @OrderID     INT,
-    @StatusName  NVARCHAR(50)
+    @StatusID    NVARCHAR(50)
 AS
 BEGIN
     SET NOCOUNT ON;
@@ -508,7 +539,7 @@ BEGIN
             THROW 50001, 'Order not found.', 1;
 
         -- 2. Validate status exists
-        DECLARE @NewStatusID INT = (SELECT StatusID FROM OrdersStatus WHERE StatusName = @StatusName);
+        DECLARE @NewStatusID INT = (SELECT StatusID FROM OrdersStatus WHERE StatusID = StatusID);
 
         IF @NewStatusID IS NULL
             THROW 50002, 'Invalid order status name.', 1;
@@ -760,5 +791,59 @@ BEGIN
     BEGIN CATCH
         THROW;
     END CATCH
+END;
+GO
+
+Create PROCEDURE SP_GetOrdersByUser
+    @UserID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+	-- 1. Validate user exists and is active
+        IF NOT EXISTS (SELECT 1 FROM Users WHERE PersonID = @UserID AND isActive = 1)
+            THROW 50001, 'User not found or is inactive.', 1;
+
+	-- 2. Validate order exists
+        IF NOT EXISTS (SELECT 1 FROM Orders WHERE UserID = @UserID)
+            THROW 50001, 'User Has No Orders', 1;
+
+    SELECT 
+        OrderID,
+        UserID,
+        TotalAmount,
+        StatusName,
+		CreatedAt
+    FROM vw_Orders
+    WHERE UserID = @UserID
+    ORDER BY OrderID DESC;
+END;
+GO
+
+Create PROCEDURE SP_GetOrderDetails
+    @OrderID INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+	-- 1. Validate order exists
+        IF NOT EXISTS (SELECT 1 FROM Orders WHERE OrderID = @OrderID)
+            THROW 50001, 'User Has No Orders', 1;
+
+    SELECT 
+        o.OrderID,
+        o.UserID,
+        o.TotalAmount,
+        os.StatusName,
+        oi.ProductID,
+        p.ProductName,
+        oi.Quantity,
+        oi.PriceAtPurchase,
+		o.CreatedAt
+    FROM Orders o
+    INNER JOIN OrdersStatus os ON o.StatusID = os.StatusID
+    INNER JOIN OrderItems oi ON o.OrderID = oi.OrderID
+    INNER JOIN Products p ON oi.ProductID = p.ProductID
+    WHERE o.OrderID = @OrderID;
 END;
 GO
